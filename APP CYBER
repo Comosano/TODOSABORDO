@@ -1,0 +1,487 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    BookOpen,
+    ShieldCheck,
+    Users,
+    MessageCircle,
+    Settings,
+    HelpCircle,
+    Star,
+    ArrowRight,
+    CheckCircle,
+    AlertTriangle,
+    Loader2,
+    Phone,
+    KeyRound,
+    Fingerprint,
+    Wifi,
+    Search,
+    DownloadCloud,
+    Trash2,
+    Check,
+    ChevronRight,
+    Info,
+    AlertCircle,
+    Youtube
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+
+// Mock data para las "apps de prueba" (simuladas, no instalaciones reales)
+const appsSeguridadData = [
+    {
+        id: 'antivirus1',
+        nombre: 'Norton 360',
+        categoria: 'Antivirus',
+        instalado: false,
+        calificacion: 4.5,
+        playStoreLink: 'https://play.google.com/store/apps/details?id=com.norton.mobile.security', // Ejemplo de link
+        tutorial: [
+            { id: 'paso1', titulo: 'Instala la App', descripcion: 'Pulsa "Instalar" para agregar Norton 360.', completado: false },
+            { id: 'paso2', titulo: 'Escanea tu Dispositivo', descripcion: 'Abre la app y realiza un escaneo completo.', completado: false },
+            { id: 'paso3', titulo: 'Revisa los Resultados', descripcion: 'Verifica si se detectaron amenazas y sigue las recomendaciones.', completado: false },
+        ],
+    },
+    {
+        id: 'firewall1',
+        nombre: 'NetGuard',
+        categoria: 'Firewall',
+        instalado: false,
+        calificacion: 4.2,
+        playStoreLink: 'https://play.google.com/store/apps/details?id=eu.faircode.netguard',  //Ejemplo
+        tutorial: [
+            { id: 'paso1', titulo: 'Instala la App', descripcion: 'Pulsa "Instalar" para agregar NetGuard.', completado: false },
+            { id: 'paso2', titulo: 'Configura las Reglas', descripcion: 'Abre la app y configura las reglas de tráfico de red.', completado: false },
+            { id: 'paso3', titulo: 'Monitorea la Actividad', descripcion: 'Supervisa las conexiones entrantes y salientes.', completado: false },
+        ],
+    },
+    {
+        id: 'vpn1',
+        nombre: 'Proton VPN',
+        categoria: 'VPN',
+        instalado: false,
+        calificacion: 4.8,
+        playStoreLink: 'https://play.google.com/store/apps/details?id=ch.protonvpn.android', // Ejemplo
+        tutorial: [
+            { id: 'paso1', titulo: 'Instala la App', descripcion: 'Pulsa "Instalar" para agregar Proton VPN.', completado: false },
+            { id: 'paso2', titulo: 'Conéctate a un Servidor', descripcion: 'Abre la app y elige un servidor VPN.', completado: false },
+            { id: 'paso3', titulo: 'Verifica tu Conexión', descripcion: 'Confirma que tu IP pública ha cambiado.', completado: false },
+        ],
+    },
+    {
+        id: 'gestorpass1',
+        nombre: 'Bitwarden',
+        categoria: 'Contraseñas',
+        instalado: false,
+        calificacion: 4.6,
+        playStoreLink: 'https://play.google.com/store/apps/details?id=com.x8bit.bitwarden',
+        tutorial: [
+            { id: 'paso1', titulo: 'Instala la App', descripcion: 'Instala Bitwarden.', completado: false },
+            { id: 'paso2', titulo: 'Crea una Contraseña Maestra', descripcion: 'Crea una contraseña maestra fuerte.', completado: false },
+            { id: 'paso3', titulo: 'Guarda tus Contraseñas', descripcion: 'Guarda tus contraseñas en el gestor.', completado: false },
+        ],
+    },
+    {
+        id: 'autenticador1',
+        nombre: 'Google Authenticator',
+        categoria: 'Autenticación',
+        instalado: false,
+        calificacion: 4.7,
+        playStoreLink: 'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2',
+        tutorial: [
+            { id: 'paso1', titulo: 'Instala la App', descripcion: 'Instala Google Authenticator.', completado: false },
+            { id: 'paso2', titulo: 'Agrega una Cuenta', descripcion: 'Agrega una cuenta para generar códigos 2FA.', completado: false },
+            { id: 'paso3', titulo: 'Usa los Códigos', descripcion: 'Usa los códigos generados para iniciar sesión.', completado: false },
+        ],
+    },
+    {
+        id: 'buscadorseguro',
+        nombre: 'DuckDuckGo Privacy Browser',
+        categoria: 'Navegación',
+        instalado: false,
+        calificacion: 4.3,
+        playStoreLink: 'https://play.google.com/store/apps/details?id=com.duckduckgo.mobile.android',
+        tutorial: [
+            { id: 'paso1', titulo: 'Instala la App', descripcion: 'Instala DuckDuckGo Privacy Browser.', completado: false },
+            { id: 'paso2', titulo: 'Navega por Internet', descripcion: 'Navega por internet usando el navegador seguro.', completado: false },
+            { id: 'paso3', titulo: 'Verifica la Seguridad', descripcion: 'Verifica que las conexiones sean seguras (HTTPS).', completado: false },
+        ],
+    },
+    {
+        id: 'antiphishing1',
+        nombre: 'Lookout Mobile Security',
+        categoria: 'Seguridad Web',
+        instalado: false,
+        calificacion: 4.4,
+        playStoreLink: 'https://play.google.com/store/apps/details?id=com.lookout. полнометражный',
+        tutorial: [
+            { id: 'paso1', titulo: 'Instala la App', descripcion: 'Instala Lookout Mobile Security.', completado: false },
+            { id: 'paso2', titulo: 'Activa la Protección', descripcion: 'Activa la protección anti-phishing.', completado: false },
+            { id: 'paso3', titulo: 'Prueba la Protección', descripcion: 'Visita un sitio web de prueba de phishing (simulado).', completado: false },
+        ],
+    },
+    {
+        id: 'backup1',
+        nombre: 'Resilio Sync',
+        categoria: 'Backup',
+        instalado: false,
+        calificacion: 4.9,
+        playStoreLink: 'https://play.google.com/store/apps/details?id=com.resilio.sync',
+        tutorial: [
+            { id: 'paso1', titulo: 'Instala la App', descripcion: 'Instala Resilio Sync.', completado: false },
+            { id: 'paso2', titulo: 'Selecciona los Datos', descripcion: 'Selecciona los datos que quieres respaldar.', completado: false },
+            { id: 'paso3', titulo: 'Realiza el Backup', descripcion: 'Realiza una copia de seguridad.', completado: false },
+        ],
+    },
+];
+
+
+
+// Componente para mostrar un tutorial de una App de Seguridad
+const AppTutorialCard = ({ app, onCompletarPaso, }: { app: any, onCompletarPaso: (appId: string, pasoId: string) => void }) => {
+    const progreso = app.tutorial.filter((p: any) => p.completado).length;
+    const porcentajeCompletado = app.tutorial.length > 0 ? (progreso / app.tutorial.length) * 100 : 0;
+
+    return (
+        <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 shadow-lg hover:shadow-blue-500/20 transition-shadow duration-300">
+            <CardHeader>
+                <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
+                    <Phone className="w-5 h-5" />
+                    {app.nombre}
+                </CardTitle>
+                <CardDescription className="text-gray-400">{app.categoria}</CardDescription>
+                {app.playStoreLink && (
+                    <div className="mt-2">
+                        <a
+                            href={app.playStoreLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 text-sm inline-flex items-center"
+                        >
+                            <DownloadCloud className="w-4 h-4 mr-1" />
+                            Descargar en Play Store
+                        </a>
+                    </div>
+                )}
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    <div className="w-full bg-gray-700 rounded-full h-2.5">
+                        <motion.div
+                            className="bg-blue-500 h-2.5 rounded-full"
+                            style={{ width: `${porcentajeCompletado}%` }}
+                            initial={{ width: '0%' }}
+                            animate={{ width: `${porcentajeCompletado}%` }}
+                            transition={{ duration: 0.5 }}
+                        />
+                    </div>
+                    <p className="text-sm text-gray-300">{progreso} de {app.tutorial.length} pasos completados</p>
+                    <div className="space-y-4">
+                        {app.tutorial.map((paso: any) => (
+                            <div key={paso.id} className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className={cn("text-sm font-medium", paso.completado ? "text-green-400" : "text-white")}>
+                                        {paso.titulo}
+                                    </span>
+                                    {paso.completado && <CheckCircle className="w-5 h-5 text-green-400" />}
+                                </div>
+                                <p className="text-sm text-gray-400">{paso.descripcion}</p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onCompletarPaso(app.id, paso.id)}
+                                    disabled={paso.completado}
+                                    className={cn(
+                                        "w-full",
+                                        paso.completado
+                                            ? "bg-green-500/20 text-green-400 border-green-500/30 cursor-default"
+                                            : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 hover:text-blue-300 border-blue-500/30"
+                                    )}
+                                >
+                                    {paso.completado ? (
+                                        <>
+                                            <Check className="w-4 h-4 mr-2" />
+                                            Completado
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ArrowRight className="w-4 h-4 mr-2" />
+                                            Marcar como Completado
+                                        </>
+                                    )}
+                                </Button>
+                                <Separator className="bg-gray-700" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
+// Componente para mostrar una "app de seguridad"
+const AppSeguridadCard = ({ app, onInstalarApp, onDesinstalarApp }: { app: any, onInstalarApp: (appId: string) => void, onDesinstalarApp: (appId: string) => void }) => {
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="bg-gray-800 rounded-lg border border-gray-700 p-4 flex items-center justify-between shadow-md"
+        >
+            <div className="flex items-center gap-4">
+                <Phone className="w-6 h-6 text-blue-400" />
+                <div>
+                    <h3 className="text-lg font-semibold text-white">{app.nombre}</h3>
+                    <p className="text-sm text-gray-400">{app.categoria}</p>
+                    <div className="flex items-center gap-1 mt-1">
+                        <Star className="w-4 h-4 text-yellow-400" />
+                        <span className="text-sm text-gray-300">{app.calificacion}</span>
+                    </div>
+                </div>
+            </div>
+            {app.instalado ? (
+                <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => onDesinstalarApp(app.id)}
+                    className="bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300"
+                >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Desinstalar
+                </Button>
+            ) : (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onInstalarApp(app.id)}
+                    className="bg-green-500/20 text-green-400 hover:bg-green-500/30 hover:text-green-300"
+                >
+                    <DownloadCloud className="w-4 h-4 mr-2" />
+                    Instalar
+                </Button>
+            )}
+        </motion.div>
+    );
+};
+
+const CiberseguraApp = () => {
+    const [appsSeguridad, setAppsSeguridad] = useState(appsSeguridadData);
+    const [busquedaApps, setBusquedaApps] = useState('');
+    const [loading, setLoading] = useState(false);
+    const youtubeChannelLink = "https://www.youtube.com/channel/UC গুরুত্বপূର୍ন_CANAL_DE_YOUTUBE"; // Reemplazar
+
+    // Función para marcar un paso del tutorial como completado
+    const handleCompletarPaso = (appId: string, pasoId: string) => {
+        setAppsSeguridad(prevApps =>
+            prevApps.map(app => {
+                if (app.id === appId) {
+                    const nuevoTutorial = app.tutorial.map((paso: any) =>
+                        paso.id === pasoId ? { ...paso, completado: true } : paso
+                    );
+                    return { ...app, tutorial: nuevoTutorial };
+                }
+                return app;
+            })
+        );
+    };
+
+    // Función para simular la instalación de una app
+    const handleInstalarApp = (appId: string) => {
+        setAppsSeguridad(prevApps =>
+            prevApps.map(app => {
+                if (app.id === appId) {
+                    // Check if the app is already installed.  If so, don't try to install again.
+                    if (app.instalado) {
+                        return app; // Return the existing app state without changes.
+                    }
+                    // Reiniciar el tutorial al instalar la app
+                    const tutorialReiniciado = app.tutorial.map((paso: any) => ({
+                        ...paso,
+                        completado: false,
+                    }));
+                    return { ...app, instalado: true, tutorial: tutorialReiniciado };
+                }
+                return app;
+            })
+        );
+        // Aquí iría la lógica real para "instalar" la app (simulación)
+        console.log(`Instalando app: ${appId}`);
+    };
+
+    // Función para simular la desinstalación de una app
+    const handleDesinstalarApp = (appId: string) => {
+        setAppsSeguridad(prevApps =>
+            prevApps.map(app =>
+                app.id === appId ? { ...app, instalado: false } : app
+            )
+        );
+        // Aquí iría la lógica real para "desinstalar" la app (simulación)
+        console.log(`Desinstalando app: ${appId}`);
+    };
+
+    const appsFiltradas = appsSeguridad.filter(app =>
+        app.nombre.toLowerCase().includes(busquedaApps.toLowerCase()) ||
+        app.categoria.toLowerCase().includes(busquedaApps.toLowerCase())
+    );
+
+    return (
+        <div className="min-h-screen bg-gray-950 text-white">
+            <div className="container mx-auto px-4 py-8">
+                <h1 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-blue-400 to-green-400 text-transparent bg-clip-text">
+                    Todos a Bordo Cyber
+                </h1>
+                <div className="flex justify-center mb-6">
+                    <a
+                        href={youtubeChannelLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md flex items-center gap-2 shadow-lg"
+                    >
+                        <Youtube className="w-5 h-5" />
+                        Nuestro Canal de YouTube
+                    </a>
+                </div>
+
+                <Tabs defaultValue="tutoriales" className="w-full space-y-6">
+                    <TabsList className="grid w-full grid-cols-3 bg-gray-800 border border-gray-700 rounded-lg">
+                        <TabsTrigger
+                            value="tutoriales"
+                            className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-700 data-[state=active]:shadow-lg"
+                        >
+                            <BookOpen className="mr-2 h-4 w-4" />
+                            Tutoriales Apps
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="apps"
+                            className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-700 data-[state=active]:shadow-lg"
+                        >
+                            <Phone className="mr-2 h-4 w-4" />
+                            Apps de Seguridad
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="perfil"
+                            className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-700 data-[state=active]:shadow-lg"
+                        >
+                            <ShieldCheck className="mr-2 h-4 w-4" />
+                            Perfil
+                        </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="tutoriales" className="space-y-4">
+                        {loading ? (
+                            <div className="flex items-center justify-center h-48">
+                                <Loader2 className="animate-spin text-4xl text-blue-500" />
+                            </div>
+                        ) : (
+                            <ScrollArea className="h-[600px] rounded-md border border-gray-700 p-4 space-y-4">
+                                {appsSeguridad.map(app => (
+                                    <AppTutorialCard
+                                        key={app.id}
+                                        app={app}
+                                        onCompletarPaso={handleCompletarPaso}
+                                    />
+                                ))}
+                                {appsSeguridad.length === 0 && (
+                                    <div className="text-center text-gray-400 py-8">
+                                        <AlertTriangle className="w-10 h-10 mx-auto mb-2" />
+                                        <p>No hay tutoriales disponibles en este momento.</p>
+                                    </div>
+                                )}
+                            </ScrollArea>
+                        )}
+                    </TabsContent>
+                    <TabsContent value="apps" className="space-y-4">
+                        <Card className="bg-gray-800 border-gray-700">
+                            <CardHeader>
+                                <CardTitle className="text-white">Apps de Seguridad para tu Móvil</CardTitle>
+                                <CardDescription className="text-gray-400">
+                                    Instala y prueba estas apps para mejorar la seguridad de tu dispositivo.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="mb-4">
+                                    <Input
+                                        type="text"
+                                        placeholder="Buscar apps..."
+                                        value={busquedaApps}
+                                        onChange={(e) => setBusquedaApps(e.target.value)}
+                                        className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
+                                    />
+                                </div>
+                                <ScrollArea className="h-[500px] rounded-md space-y-4">
+                                    <AnimatePresence>
+                                        {appsFiltradas.map(app => (
+                                            <AppSeguridadCard
+                                                key={app.id}
+                                                app={app}
+                                                onInstalarApp={handleInstalarApp}
+                                                onDesinstalarApp={handleDesinstalarApp}
+                                            />
+                                        ))}
+                                    </AnimatePresence>
+                                    {appsFiltradas.length === 0 && (
+                                        <div className="text-center text-gray-400 py-8">
+                                            <Search className="w-10 h-10 mx-auto mb-2" />
+                                            <p>No se encontraron apps que coincidan con tu búsqueda.</p>
+                                        </div>
+                                    )}
+                                </ScrollArea>
+                                <div className="mt-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300">
+                                    <AlertTriangle className="w-5 h-5 mr-2 inline-block" />
+                                    <p className="text-sm">
+                                        <strong>Importante:</strong> Los enlaces de descarga te llevarán a Google Play Store. La instalación real de las
+                                        aplicaciones se realiza fuera de esta aplicación. Esta aplicación simula la instalación para fines educativos.
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="perfil">
+                        <Card className="bg-gray-800 border-gray-700">
+                            <CardHeader>
+                                <CardTitle className="text-white">Perfil</CardTitle>
+                                <CardDescription className="text-gray-400">
+                                    Gestiona tu perfil y preferencias.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="text-gray-300">
+                                    <p>
+                                        Aquí podrás personalizar tu perfil, ver tu progreso y ajustar la
+                                        configuración de la app.
+                                    </p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <Button className="bg-gray-700 hover:bg-gray-600 text-gray-300">
+                                        <Settings className="mr-2 h-4 w-4" />
+                                        Configuración
+                                    </Button>
+                                    <Button className="bg-gray-700 hover:bg-gray-600 text-gray-300">
+                                        <HelpCircle className="mr-2 h-4 w-4" />
+                                        Ayuda y Soporte
+                                    </Button>
+                                    <Button className="bg-gray-700 hover:bg-gray-600 text-gray-300">
+                                        <Star className="mr-2 h-4 w-4" />
+                                        Calificar la App
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+            </div>
+        </div>
+    );
+};
+
+export default CiberseguraApp;
